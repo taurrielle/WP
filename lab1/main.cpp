@@ -25,7 +25,7 @@ void checkIfCompOpened()
     {
         MessageBox(NULL, "Wow! You're not wasting time on the Internet. \nWell, that's a first! ", "Amazing", MB_OK |MB_ICONINFORMATION);
     }
-     else
+    else
     {
         MessageBox(NULL, "Stop browsing the Internet and get to work!!!", "Get to work", MB_OK | MB_ICONERROR);
     }
@@ -376,11 +376,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         break;
     }
 
-        default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
-        }
-        break;
-    }
 
     case WM_DESTROY:
         PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
@@ -390,4 +385,3 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     }
     return 0;
 }
-
