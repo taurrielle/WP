@@ -104,7 +104,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rect;
-    HBRUSH color;
+    HBRUSH text3Color;
     HFONT hfFont;
     static HWND button1, button2, button3, button4, comboBox, text1, text2, text3;
     static short cxClient, cyClient;
@@ -376,6 +376,40 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         break;
     }
 
+    case WM_SYSCOMMAND:
+    {
+        switch(wParam)
+        {
+        case SC_MINIMIZE:
+        {
+            checkIfCompOpened();
+            break;
+        }
+
+        case SC_MAXIMIZE:
+        {
+            RECT rc;
+            GetWindowRect ( hwnd, &rc ) ;
+            int xPos = rand() % 800;
+            int yPos = rand() % 800;
+            SetWindowPos( hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
+            break;
+        }
+
+        case SC_CLOSE:
+        {
+            if(MessageBox(hwnd, "Are you sure you want to quit?", "Close?", MB_YESNO | MB_ICONQUESTION) == IDYES)
+            {
+                exit(1);
+            }
+            break;
+        }
+
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
+        }
+        break;
+    }
 
     case WM_DESTROY:
         PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
