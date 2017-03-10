@@ -25,7 +25,7 @@ void checkIfCompOpened()
     {
         MessageBox(NULL, "Wow! You're not wasting time on the Internet. \nWell, that's a first! ", "Amazing", MB_OK |MB_ICONINFORMATION);
     }
-     else
+    else
     {
         MessageBox(NULL, "Stop browsing the Internet and get to work!!!", "Get to work", MB_OK | MB_ICONERROR);
     }
@@ -104,7 +104,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rect;
-    HBRUSH text3Color;
+    HBRUSH text3Color, color;
     HFONT hfFont;
     static HWND button1, button2, button3, button4, comboBox, text1, text2, text3;
     static short cxClient, cyClient;
@@ -137,7 +137,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                  hwnd,(HMENU)ID_BUTTON2, GetModuleHandle(NULL), NULL);
 
         button3 = CreateWindowEx(0, "BUTTON", "Click!!!",
-                                 WS_TABSTOP|WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON,
+                                 WS_TABSTOP|WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW,
                                  0, 0, 0, 0,
                                  hwnd,(HMENU)ID_BUTTON3, GetModuleHandle(NULL), NULL);
 
@@ -374,48 +374,35 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             return (INT_PTR)CreateSolidBrush(RGB(255, 237, 237));
         }
         break;
-    /*
-      case WM_CTLCOLOREDIT:
-                if(GetDlgCtrlID((HWND)lParam) == ID_BUTTON)
-                {
-                    hdc = (HDC)wParam;                                              //Get handles
-                        color = CreateSolidBrush(RGB(0, 0, 255));
-                        SetTextColor(hdc, RGB(0,0,0));                              // Text color
-                        SetBkMode(hdc, TRANSPARENT);                                // EditBox Backround Mode
-                        SetBkColor(hdc,(LONG)color);                                // Backround color for EditBox
 
-                    return (LONG)color;                                             // Paint it
-                }
-                break;
+    case WM_DRAWITEM:
+        if ((UINT)wParam == ID_BUTTON3)
+        {
+            LPDRAWITEMSTRUCT lpdis = (DRAWITEMSTRUCT*)lParam;
+            SIZE size;
+            GetTextExtentPoint32(lpdis->hDC, "Click!!!", strlen("Click!!!"), &size);
+            SetTextColor(lpdis->hDC, RGB(255, 255, 255));
+            SetBkColor(lpdis->hDC, RGB(211, 141, 141));
 
-                 case WM_DRAWITEM:
-                if ((UINT)wParam == ID_BUTTON) {
-                    LPDRAWITEMSTRUCT lpdis = (DRAWITEMSTRUCT*)lParam;
-                    SIZE size;
-                    char szLondonBtnText[7] = "bla";
-                    GetTextExtentPoint32(lpdis->hDC, szLondonBtnText, strlen(szLondonBtnText), &size);
-                    SetTextColor(lpdis->hDC, RGB(245,245,220));
-                    SetBkColor(lpdis->hDC, RGB(150,104,108));
+            ExtTextOut(
+                lpdis->hDC,
+                ((lpdis->rcItem.right - lpdis->rcItem.left) - size.cx) / 2,
+                ((lpdis->rcItem.bottom - lpdis->rcItem.top) - size.cy) / 2,
+                ETO_OPAQUE | ETO_CLIPPED,
+                &lpdis->rcItem,
+                "Click!!!",
+                strlen("Click!!!"),
+                NULL);
 
-                    ExtTextOut(
-                        lpdis->hDC,
-                        ((lpdis->rcItem.right - lpdis->rcItem.left) - size.cx) / 2,
-                        ((lpdis->rcItem.bottom - lpdis->rcItem.top) - size.cy) / 2,
-                        ETO_OPAQUE | ETO_CLIPPED,
-                        &lpdis->rcItem,
-                        szLondonBtnText,
-                        strlen(szLondonBtnText),
-                        NULL);
+            DrawEdge(
+                lpdis->hDC,
+                &lpdis->rcItem,
+                (lpdis->itemState & ODS_SELECTED ? EDGE_SUNKEN : EDGE_RAISED ),
+                BF_RECT);
+            return TRUE;
+        }
 
-                    DrawEdge(
-                        lpdis->hDC,
-                        &lpdis->rcItem,
-                        (lpdis->itemState & ODS_SELECTED ? EDGE_SUNKEN : EDGE_RAISED ),
-                        BF_RECT);
-                    return TRUE;
-    			}
 
-    */
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO winSize = (LPMINMAXINFO)lParam;
@@ -432,20 +419,17 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         {
         case SC_MINIMIZE:
         {
-            RECT rc;
-
-            GetWindowRect ( hwnd, &rc ) ;
-
-            int xPos = rand() % 800;
-            int yPos = rand() % 800;
-
-            SetWindowPos( hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
+            checkIfCompOpened();
             break;
         }
 
         case SC_MAXIMIZE:
         {
-            checkIfCompOpened();
+            RECT rc;
+            GetWindowRect ( hwnd, &rc ) ;
+            int xPos = rand() % 800;
+            int yPos = rand() % 800;
+            SetWindowPos( hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
             break;
         }
 
