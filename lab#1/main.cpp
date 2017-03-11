@@ -381,7 +381,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             LPDRAWITEMSTRUCT lpdis = (DRAWITEMSTRUCT*)lParam;
             SIZE size;
             GetTextExtentPoint32(lpdis->hDC, "Click!!!", strlen("Click!!!"), &size);
-            SetTextColor(lpdis->hDC, RGB(255, 255, 255));
+            SetTextColor(lpdis->hDC, RGB(0, 0, 0));
             SetBkColor(lpdis->hDC, RGB(211, 141, 141));
 
             ExtTextOut(
