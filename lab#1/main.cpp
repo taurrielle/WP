@@ -111,9 +111,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static bool textFlag = false, redFlag = false, purpleFlag = false, pinkFlag = false, defaultFlag = false;
     LRESULT textSize;
     int comboIndex;
+    static int R, G, B;
     char* fontList[] = {"Cambria", "Arial", "Times New Roman", "Calibri", "Helvetica", "Consolas",
-                        "Tahoma", "Courier New", "Georgia", "Baskerville"
-                       };
+                        "Tahoma", "Courier New", "Georgia", "Baskerville"};
 
     switch (message)                  /* handle the messages */
     {
@@ -229,8 +229,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 }
                 else if(comboIndex == 4)
                 {
+                    srand(GetTickCount());
+                    R = rand() % 256;
+                    G = rand() % 256;
+                    B = rand() % 256;
                     textFlag = true;
                     redFlag = defaultFlag = purpleFlag = pinkFlag = false;
+
                     InvalidateRect(text3, NULL, TRUE);
                     break;
                 }
@@ -302,6 +307,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_CTLCOLORSTATIC:
     {
+
+
         if(defaultFlag == true && (HWND)lParam == text3)
         {
             HBRUSH hbr = (HBRUSH) DefWindowProc(hwnd, message, wParam, lParam);
@@ -312,7 +319,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         else if(textFlag == true && (HWND)lParam == text3)
         {
             HBRUSH hbr = (HBRUSH) DefWindowProc(hwnd, message, wParam, lParam);
-            SetTextColor((HDC) wParam, RGB(rand() % 256, rand() % 256, rand() % 256));
+            SetTextColor((HDC) wParam, RGB(R,G,B));
             return (BOOL) hbr;
         }
 
@@ -427,8 +434,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         {
             RECT rc;
             GetWindowRect ( hwnd, &rc ) ;
+            srand(GetTickCount());
             int xPos = rand() % 800;
-            int yPos = rand() % 800;
+            int yPos = rand() % 700;
             SetWindowPos( hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
             break;
         }
