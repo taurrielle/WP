@@ -15,7 +15,6 @@
 #define ID_BUTTON4 107
 #define ID_COMBOBOX 108
 
-
 void checkIfCompOpened()
 {
     LPCSTR browser = "Chrome_WidgetWin_1";
@@ -45,23 +44,19 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
     WNDCLASSEX wincl;        /* Data structure for the windowclass */
-
     /* The Window structure */
     wincl.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS ;
     wincl.hInstance = hThisInstance;
     wincl.lpszClassName = szClassName;
     wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
     wincl.cbSize = sizeof (WNDCLASSEX);
-
-    /* Use default icon and mouse-pointer */
-    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);     /* Use default icon and mouse-pointer */
     wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
     wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
     wincl.lpszMenuName = NULL;                 /* No menu */
     wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
     wincl.cbWndExtra = 0;                      /* structure or the window instance */
-    /* Use Windows's default colour as the background of the window */
-    wincl.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
+    wincl.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);  /* Use Windows's default colour as the background of the window */
 
     /* Register the window class, and if it fails quit the program */
     if (!RegisterClassEx (&wincl))
@@ -104,12 +99,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rect;
-    HBRUSH text3Color, color;
     HFONT hfFont;
     static HWND button1, button2, button3, button4, comboBox, text1, text2, text3;
     static short cxClient, cyClient;
     static bool textFlag = false, redFlag = false, purpleFlag = false, pinkFlag = false, defaultFlag = false;
-    LRESULT textSize;
     int comboIndex;
     static int R, G, B;
     char* fontList[] = {"Cambria", "Arial", "Times New Roman", "Calibri", "Helvetica", "Consolas",
@@ -165,6 +158,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                WS_VISIBLE | WS_CHILD | ES_MULTILINE |ES_READONLY,
                                0, 0, 0, 0,
                                hwnd, (HMENU)ID_TEXT3, GetModuleHandle(NULL), NULL);
+
         SendMessage(comboBox, CB_ADDSTRING, 0, (LPARAM)"Select color");
         SendMessage(comboBox, CB_ADDSTRING, 0, (LPARAM)"Dark red");
         SendMessage(comboBox, CB_ADDSTRING, 0, (LPARAM)"Pretty purple");
@@ -242,7 +236,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             }
             break;
 
-        case ID_BUTTON1:
+        case ID_BUTTON1:      /*reset button*/
         {
             SendMessage(text1, WM_SETTEXT, NULL, (LPARAM)"Enter your name...");
             SendMessage(text2, WM_SETTEXT, NULL, (LPARAM)"Enter your surname...");
@@ -252,7 +246,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             break;
         }
 
-        case ID_BUTTON2:
+        case ID_BUTTON2:    /*ok button*/
         {
             char buff[500], buff2[500], result[1000];
             GetWindowText(GetDlgItem(hwnd, ID_TEXT1), buff, 1000);
@@ -265,7 +259,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             break;
         }
 
-        case ID_BUTTON3:
+        case ID_BUTTON3:    /*click button*/
         {
             char buff[500], result[1000] = "Hello ";
             GetWindowText(GetDlgItem(hwnd, ID_TEXT3), buff, 500);
@@ -276,7 +270,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             break;
         }
 
-        case ID_BUTTON4:
+        case ID_BUTTON4:    /*font button*/
         {
             int index;
             index = rand() % 9;
@@ -307,8 +301,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_CTLCOLORSTATIC:
     {
-
-
         if(defaultFlag == true && (HWND)lParam == text3)
         {
             HBRUSH hbr = (HBRUSH) DefWindowProc(hwnd, message, wParam, lParam);
@@ -323,7 +315,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             return (BOOL) hbr;
         }
 
-
         else if(redFlag == true && (HWND)lParam == text3)
         {
             HBRUSH hbr = (HBRUSH) DefWindowProc(hwnd, message, wParam, lParam);
@@ -337,7 +328,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             SetTextColor((HDC) wParam, RGB(153, 115, 255));
             return (BOOL) hbr;
         }
-
 
         else if(pinkFlag == true && (HWND)lParam == text3)
         {
@@ -409,7 +399,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             return TRUE;
         }
 
-
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO winSize = (LPMINMAXINFO)lParam;
@@ -432,8 +421,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case SC_MAXIMIZE:
         {
-            RECT rc;
-            GetWindowRect ( hwnd, &rc ) ;
             srand(GetTickCount());
             int xPos = rand() % 800;
             int yPos = rand() % 700;
