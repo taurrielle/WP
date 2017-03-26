@@ -5,12 +5,9 @@ IDM_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Exit              Ctrl+W", ID_EXIT
-    END
-
-    POPUP "&About"
-    BEGIN
         MENUITEM "&About", ID_ABOUT
+        MENUITEM SEPARATOR
+        MENUITEM "&Exit              Ctrl+W", ID_EXIT
     END
 
     POPUP "&Help"
@@ -29,7 +26,6 @@ BEGIN
     CTEXT "WP Lab 2", IDC_STATIC, 0, 20, 150, 10
     CTEXT "by Ungureanu Irina", IDC_STATIC, 0, 30, 150, 10
     CTEXT "Advanced Form Elements", IDC_STATIC, 0, 50, 150, 10
-
 END
 
 
