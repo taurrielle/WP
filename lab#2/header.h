@@ -27,3 +27,10 @@
 #define ID_ADD 122
 #define ID_REMOVE 123
 #define ID_RESET 124
+
+#define HK_DELETE 125
+#define HK_ADD 126
+#define ID_HOTKEYS 127
+#define ID_DLGHOTKEYS 128
+#define ID_DELETE 129
+

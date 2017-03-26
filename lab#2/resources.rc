@@ -10,10 +10,16 @@ BEGIN
         MENUITEM "&Exit              Ctrl+W", ID_EXIT
     END
 
+    POPUP "&Hotkeys"
+    BEGIN
+        MENUITEM "&Hotkey list", ID_HOTKEYS
+    END
+
     POPUP "&Help"
     BEGIN
         MENUITEM "&Help              Ctrl+H", ID_HELP
     END
+
 END
 
 
@@ -28,6 +34,22 @@ BEGIN
     CTEXT "Advanced Form Elements", IDC_STATIC, 0, 50, 150, 10
 END
 
+ID_DLGHOTKEYS DIALOG DISCARDABLE 70, 20, 150, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 10, "Courier New"
+CAPTION "Hotkey list"
+BEGIN
+    DEFPUSHBUTTON   "&OK", IDOK, 50, 70, 50, 15
+    LTEXT "Add", IDC_STATIC, 30, 20, 70, 10
+    LTEXT "Remove", IDC_STATIC, 30, 30, 80, 10
+    LTEXT "Help", IDC_STATIC, 30, 40, 70, 10
+    LTEXT "Exit", IDC_STATIC, 30, 50, 70, 10
+
+    RTEXT "CTRL + ENTER", IDC_STATIC, 60, 20, 60, 10
+    RTEXT "CTRL + D", IDC_STATIC, 60, 30, 60, 10
+    RTEXT "CTRL + H", IDC_STATIC, 60, 40, 60, 10
+    RTEXT "CTRL + W", IDC_STATIC, 60, 50, 60, 10
+END
 
 ID_CURSOR CURSOR DISCARDABLE "curs.cur"
 ID_ICON ICON DISCARDABLE "icon.ico"

@@ -10,7 +10,8 @@
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK DlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK ColorScrDlg (HWND, UINT, WPARAM, LPARAM) ;
+BOOL CALLBACK ColorScrDlg (HWND hDialog, UINT message,
+                           WPARAM wParam, LPARAM lParam);
 
 /*  Make the class name into a global variable  */
 char szClassName[ ] = "WindowsApp";
@@ -87,14 +88,15 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     PAINTSTRUCT ps;
     RECT rect;
     static HWND scrollBar[3], scrollLabel[3], scrollValue[3], listBox, submitBox,
-           buttonAdd, buttonRemove, buttonReset;
+           buttonAdd, buttonRemove, buttonReset, buttonDelete;
     static HINSTANCE hInstance;
     static int cxCoord, cyCoord;
-    static int xPos, xMin, xMax, i, index;
+    static int xPos, xMin, xMax, i, index,iVertPos;
     static int color[3] = {0,0,0} ;
     static LRESULT textSize;
     static char textStore[20];
     char szbuffer[10];
+    SCROLLINFO si ;
 
     switch (message)                  /* handle the messages */
     {
@@ -118,14 +120,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                        0, 0, 0, 0,
                                        hwnd, (HMENU) ID_ADD, GetModuleHandle(NULL), NULL);
 
+            buttonDelete = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Delete"),
+                                          WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                          0, 0, 0, 0,
+                                          hwnd, (HMENU) ID_DELETE, GetModuleHandle(NULL), NULL);
+
             buttonRemove = CreateWindowEx(NULL, TEXT("Button"), TEXT("Remove"),
                                           WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
                                           0, 0, 0, 0,
                                           hwnd, (HMENU)ID_REMOVE, GetModuleHandle(NULL), NULL);
             buttonReset = CreateWindowEx(NULL, TEXT("Button"), TEXT("Reset"),
-                                          WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-                                          0, 0, 0, 0,
-                                          hwnd, (HMENU)ID_RESET, GetModuleHandle(NULL), NULL);
+                                         WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+                                         0, 0, 0, 0,
+                                         hwnd, (HMENU)ID_RESET, GetModuleHandle(NULL), NULL);
 
             scrollBar[i] = CreateWindowEx(NULL, TEXT("SCROLLBAR"), TEXT("KNKJNK"),
                                           WS_VISIBLE | WS_CHILD | SBS_HORZ,
@@ -150,7 +157,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         RegisterHotKey(hwnd, HK_EXIT, MOD_CONTROL, 0x57); //ctrl+W
         RegisterHotKey(hwnd, HK_HELP, MOD_CONTROL, 0x48); //ctrl+H
-
+        RegisterHotKey(hwnd, HK_DELETE, MOD_CONTROL, 0x44); // ctrl+D
+        RegisterHotKey(hwnd, HK_ADD, MOD_CONTROL, VK_RETURN); //ctrl+enter
         hInst = ((LPCREATESTRUCT)lParam)->hInstance;
         break;
     }
@@ -159,21 +167,24 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         cxCoord = LOWORD(lParam);
         cyCoord = HIWORD(lParam);
+        MoveWindow(listBox, cxCoord/2 - 310, cyCoord/2 -120, 300, 300, TRUE);
+        MoveWindow(submitBox, cxCoord/2 - 310, cyCoord/2 - 170, 300, 25, TRUE);
+        MoveWindow(buttonAdd, cxCoord/2 + 30, cyCoord/2 - 170, 50, 25, TRUE);
+        MoveWindow(buttonDelete, cxCoord/2 + 90, cyCoord/2 - 170, 60, 25, TRUE);
+        MoveWindow(buttonRemove, cxCoord/2 + 30, cyCoord/2 - 120, 70, 25, TRUE);
+        MoveWindow(buttonReset, cxCoord/2 + 30, cyCoord/2 - 85, 70, 25, TRUE);
 
         for(i = 0; i < 3; i++)
         {
-            MoveWindow(listBox, cxCoord/2 - 310, cyCoord/2 -120, 300, 300, TRUE);
-            MoveWindow(submitBox, cxCoord/2 - 310, cyCoord/2 - 170, 300, 25, TRUE);
-            MoveWindow(buttonAdd, cxCoord/2 + 30, cyCoord/2 - 170, 50, 25, TRUE);
-            MoveWindow(buttonRemove, cxCoord/2 + 90, cyCoord/2 - 170, 70, 25, TRUE);
-            MoveWindow(buttonReset, cxCoord/2 + 170, cyCoord/2 - 170, 70, 25, TRUE);
-
-            MoveWindow(scrollBar[i], cxCoord/2 + 55, cyCoord/2 + (i * 30) - 120 , 225, 20, TRUE);
-            MoveWindow(scrollLabel[i], cxCoord/2 + 30, cyCoord/2 + (i * 30) - 120, 20, 20, TRUE);
-            MoveWindow(scrollValue[i], cxCoord/2 + 285, cyCoord/2 + (i * 30) - 120, 30, 20, TRUE);
+            MoveWindow(scrollBar[i], cxCoord/2 + 55, cyCoord/2 + (i * 30) - 30, 225, 20, TRUE);
+            MoveWindow(scrollLabel[i], cxCoord/2 + 30, cyCoord/2 + (i * 30) - 30, 20, 20, TRUE);
+            MoveWindow(scrollValue[i], cxCoord/2 + 285, cyCoord/2 + (i * 30) - 30, 30, 20, TRUE);
         }
         break;
     }
+
+
+
 
     case WM_COMMAND:
         if (HIWORD(wParam) == EN_SETFOCUS && LOWORD(wParam) == ID_SUBMIT_BOX)
@@ -187,9 +198,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             textSize = SendMessage(submitBox, WM_GETTEXT, 100, (LPARAM)textStore);
             textStore[textSize+1] = _T('\0');
             SendMessage(listBox, LB_ADDSTRING, 0, (LPARAM)textStore);
-
-            //RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
             SendMessage(submitBox, WM_SETTEXT, NULL, (LPARAM)"Enter your text...");
+            break;
+        }
+
+        case ID_DELETE:
+        {
+            SendMessage(submitBox, WM_SETTEXT, NULL, NULL);
             break;
         }
 
@@ -203,7 +218,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case ID_RESET:
         {
-            SendMessage(listBox, LB_RESETCONTENT, 0 , 0);
+            SendMessage(listBox, LB_RESETCONTENT, 0, 0);
             break;
         }
 
@@ -219,7 +234,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             }
             break;
         }
-
         case ID_EXIT:
         {
             exit(1);
@@ -234,7 +248,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             DialogBox(hInstance, MAKEINTRESOURCE(ID_DLGBOX), hwnd, DlgProc);
             break;
         }
-        break;
+        case ID_HOTKEYS:
+        {
+            DialogBox(hInstance, MAKEINTRESOURCE(ID_DLGHOTKEYS), hwnd, DlgProc);
+            break;
+        }
         }
         break;
 
@@ -296,7 +314,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         }
 
         SetScrollPos(scrollBar[i], SB_CTL, color[i], TRUE);
-         SetWindowText (scrollValue[i], itoa (color[i], szbuffer, 10)) ;
+        SetWindowText (scrollValue[i], itoa (color[i], szbuffer, 10)) ;
         if(color[i] == xMax)
         {
 
@@ -333,6 +351,16 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             MessageBox(hwnd, "You need help??? Why?", "Help?", MB_OK | MB_ICONQUESTION);
             break;
         }
+        case HK_DELETE:
+        {
+            SendMessage(buttonRemove, BM_CLICK, 0, MAKELPARAM(0, 0));
+            break;
+        }
+        case HK_ADD:
+        {
+            SendMessage(buttonAdd, BM_CLICK, 0, MAKELPARAM(0, 0));
+            break;
+        }
         default:
             break;
         }
@@ -343,7 +371,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         LPMINMAXINFO winSize = (LPMINMAXINFO)lParam;
         winSize->ptMinTrackSize.x = 750;
-        winSize->ptMinTrackSize.y = 500;
+        winSize->ptMinTrackSize.y = 300;
         //winSize->ptMaxTrackSize.x = 630;
         //winSize->ptMaxTrackSize.y = 425;
         break;
@@ -375,7 +403,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             }
             break;
         }
-
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
         }
@@ -414,4 +441,5 @@ BOOL CALLBACK DlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
     }
     return FALSE;
 }
+
 
