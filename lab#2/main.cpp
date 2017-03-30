@@ -92,7 +92,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static HINSTANCE hInstance;
     static int cxCoord, cyCoord;
     static int xPos, xMin, xMax, i, index,iVertPos;
-    static int color[3] = {0,0,0} ;
+    static int color[3] = {255,255,255} ;
     static LRESULT textSize;
     static char textStore[20];
     char szbuffer[10];
@@ -144,7 +144,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                            0, 0, 0, 0,
                                            hwnd, (HMENU) (i + 112), hInstance, NULL) ;
 
-            scrollValue[i] = CreateWindow ("static", "0",
+            scrollValue[i] = CreateWindow ("static", "255",
                                            WS_CHILD | WS_VISIBLE | SS_CENTER,
                                            0, 0, 0, 0,
                                            hwnd, (HMENU) (i + 115), hInstance, NULL) ;
@@ -152,7 +152,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             xMin = 0;
             xMax = 255;
             SetScrollRange(scrollBar[i], SB_CTL, 0, 255, FALSE);
-            SetScrollPos(scrollBar[i], SB_CTL, 0, TRUE);
+            SetScrollPos(scrollBar[i], SB_CTL, 255, TRUE);
         }
 
         RegisterHotKey(hwnd, HK_EXIT, MOD_CONTROL, 0x57); //ctrl+W
@@ -182,9 +182,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         }
         break;
     }
-
-
-
 
     case WM_COMMAND:
         if (HIWORD(wParam) == EN_SETFOCUS && LOWORD(wParam) == ID_SUBMIT_BOX)
@@ -317,7 +314,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         SetWindowText (scrollValue[i], itoa (color[i], szbuffer, 10)) ;
         if(color[i] == xMax)
         {
-
             EnableScrollBar(scrollBar[i], SB_CTL, ESB_DISABLE_RIGHT);
         }
         else if(color[i] == xMin)
@@ -370,8 +366,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO winSize = (LPMINMAXINFO)lParam;
-        winSize->ptMinTrackSize.x = 750;
-        winSize->ptMinTrackSize.y = 300;
+        winSize->ptMinTrackSize.x = 700;
+        winSize->ptMinTrackSize.y = 500;
         //winSize->ptMaxTrackSize.x = 630;
         //winSize->ptMaxTrackSize.y = 425;
         break;
@@ -379,16 +375,27 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_SETCURSOR:
     {
-        if (LOWORD(lParam) == HTCLIENT)
+        if (LOWORD(lParam) == HTBOTTOMLEFT || LOWORD(lParam) == HTTOPRIGHT)
         {
-            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR)));
-            return TRUE;
+            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR5)));
+        }
+        else if (LOWORD(lParam) == HTBOTTOMRIGHT || LOWORD(lParam) == HTTOPLEFT)
+        {
+            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR4)));
+        }
+        else if (LOWORD(lParam) == HTBOTTOM || LOWORD(lParam) == HTTOP)
+        {
+            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR2)));
+        }
+        else if (LOWORD(lParam) == HTLEFT || LOWORD(lParam) == HTRIGHT)
+        {
+            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR3)));
         }
         else
         {
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            SetCursor(LoadCursor(hInst, MAKEINTRESOURCE(ID_CURSOR)));
         }
-        break;
+        return TRUE;
     }
 
     case WM_SYSCOMMAND:

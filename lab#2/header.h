@@ -34,3 +34,7 @@
 #define ID_DLGHOTKEYS 128
 #define ID_DELETE 129
 
+#define ID_CURSOR2 130
+#define ID_CURSOR3 131
+#define ID_CURSOR4 132
+#define ID_CURSOR5 133
