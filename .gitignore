@@ -30,3 +30,15 @@
 # MS Office trash
 ~*.tmp
 ~*.docx
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
