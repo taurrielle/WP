@@ -11,6 +11,8 @@
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 bool IsInArea(POINT point, RECT rect, int excess);
+bool IsInEraserArea(POINT point, RECT rect, int eraserWeight);
+
 int getValue(HWND input);
 POINT AdjustDrawLimits(POINT ptMouse, RECT limit, int stroke);
 
@@ -55,7 +57,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                szClassName,         /* Classname */
                "WP Lab2",       /* Title Text */
                WS_OVERLAPPEDWINDOW | WS_OVERLAPPED | WS_CAPTION,
-                                    /* default window */
+               /* default window */
                CW_USEDEFAULT,       /* Windows decides the position */
                CW_USEDEFAULT,       /* where the window ends up on the screen */
                500,                 /* The programs width */
@@ -70,8 +72,6 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     ShowWindow (hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
-
-
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage (&messages, NULL, 0, 0))
     {
@@ -84,15 +84,6 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     return messages.wParam;
 }
 
-/*void DrawBezier (HDC hdc, POINT apt[])
-{
-    PolyBezier (hdc, apt, 4) ;
-    MoveToEx (hdc, apt[0].x, apt[0].y, NULL) ;
-    LineTo (hdc, apt[1].x, apt[1].y) ;
-
-    MoveToEx (hdc, apt[2].x, apt[2].y, NULL) ;
-    LineTo (hdc, apt[3].x, apt[3].y) ;
-}*/
 
 LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -100,11 +91,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     PAINTSTRUCT ps;
     static RECT rect;
     static HWND buttonRect, buttonLine, buttonBezier, buttonEraser, buttonZoomIn, fillCheck,
-                strokeWeight, eraserWidth;
+           strokeWeight, eraserWidth;
     static HINSTANCE hInstance;
     static int cxCoord, cyCoord, shapeWeight, eraserWeight;
     static RECT drawingArea = {120, 15, 600, 450},
-                drawingAreaWithStroke = {119, 14, 601, 451};
+                eraserArea = {120, 15, 600, 450};
     static POINT apt[4], bezierPoints[4];
     static POINT Pt[4] = { {  40,  100 }, {  60, 150 }, { 140, 150 }, { 110,  48 } };//for bezier
     static POINT polyPt[4] = {{50, 220}, {30, 250}, {70, 250}, {90, 220}};
@@ -112,10 +103,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static RECT newRect;
     static POINT newLine, ptPen;
     COLORREF color;
-
     static BOOL rectangleFlag = false, lineFlag = false, bezierFlag = false, eraserFlag = false, zoomInFlag = false,
                 lButtonFlag = false;
-
     HDC hdcMem;
     static BITMAP bitmap;
     HBITMAP hbmpImage = NULL;
@@ -127,9 +116,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
 
         CreateWindowEx(0, "Button", "Tools",
-                        WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
-                        620, 8, 140, 200,
-                        hwnd, (HMENU)0, hInstance, NULL);
+                       WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
+                       620, 8, 140, 200,
+                       hwnd, (HMENU)0, hInstance, NULL);
 
         buttonRect = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Rectangle"),
                                     WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -157,60 +146,60 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                       hwnd, (HMENU) ID_ZOOMIN, GetModuleHandle(NULL), NULL);
 
         CreateWindowEx(0, "Static", "Shape weight",
-                        WS_VISIBLE | WS_CHILD,
-                        630, 220, 120, 20,
-                        hwnd, (HMENU)0, hInstance, NULL);
+                       WS_VISIBLE | WS_CHILD,
+                       630, 220, 120, 20,
+                       hwnd, (HMENU)0, hInstance, NULL);
 
         strokeWeight = CreateWindowEx(0, "Edit", "1",
-                                        WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER,
-                                        725, 220, 30, 20,
-                                        hwnd, (HMENU)ID_STROKEWEIGHT, hInstance, NULL);
+                                      WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER,
+                                      725, 220, 30, 20,
+                                      hwnd, (HMENU)ID_STROKEWEIGHT, hInstance, NULL);
 
         CreateWindowEx(0, "Static", "Eraser weight",
-                        WS_VISIBLE | WS_CHILD,
-                        630, 250, 120, 20,
-                        hwnd, (HMENU)0, hInstance, NULL);
+                       WS_VISIBLE | WS_CHILD,
+                       630, 250, 120, 20,
+                       hwnd, (HMENU)0, hInstance, NULL);
 
         eraserWidth = CreateWindowEx(0, "Edit", "1",
-                                        WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER,
-                                        725, 250, 30, 20,
-                                        hwnd, (HMENU)ID_ERASERWEIGHT, hInstance, NULL);
+                                     WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER,
+                                     725, 250, 30, 20,
+                                     hwnd, (HMENU)ID_ERASERWEIGHT, hInstance, NULL);
 
         fillCheck = CreateWindowEx(0, "Button", "Fill shape",
-                                    WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
-                                    630, 280, 100, 30,
-                                    hwnd, (HMENU)ID_FILL, hInstance, NULL);
+                                   WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
+                                   630, 280, 100, 30,
+                                   hwnd, (HMENU)ID_FILL, hInstance, NULL);
 
         CreateWindowEx(0, "Button", "Colors",
-                        WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
-                        620, 310, 140, 140,
-                        hwnd, (HMENU)0, hInstance, NULL);
+                       WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
+                       620, 310, 140, 140,
+                       hwnd, (HMENU)0, hInstance, NULL);
 
 
         CreateWindowEx(0, "BUTTON", "Red",
-                            WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
-                            650, 335, 60, 20,
-                            hwnd, (HMENU)ID_RED, GetModuleHandle(NULL), NULL);
+                       WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+                       650, 335, 60, 20,
+                       hwnd, (HMENU)ID_RED, GetModuleHandle(NULL), NULL);
 
         CreateWindowEx(0, "BUTTON", "Yellow",
-                            WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                            650, 355, 65, 20,
-                            hwnd, (HMENU)ID_YELLOW, GetModuleHandle(NULL), NULL);
+                       WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                       650, 355, 65, 20,
+                       hwnd, (HMENU)ID_YELLOW, GetModuleHandle(NULL), NULL);
 
         CreateWindowEx(0, "BUTTON", "Blue",
-                            WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                            650, 375, 60, 20,
-                            hwnd, (HMENU)ID_BLUE, GetModuleHandle(NULL), NULL);
+                       WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                       650, 375, 60, 20,
+                       hwnd, (HMENU)ID_BLUE, GetModuleHandle(NULL), NULL);
 
         CreateWindowEx(0, "BUTTON", "Purple",
-                            WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON ,
-                            650, 395, 60, 20,
-                            hwnd, (HMENU)ID_PURPLE, GetModuleHandle(NULL), NULL);
+                       WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                       650, 395, 60, 20,
+                       hwnd, (HMENU)ID_PURPLE, GetModuleHandle(NULL), NULL);
 
         CreateWindowEx(0, "BUTTON", "Black",
-                            WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | BST_CHECKED,
-                            650, 415, 60, 20,
-                            hwnd, (HMENU)ID_BLACK, GetModuleHandle(NULL), NULL);
+                       WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | BST_CHECKED,
+                       650, 415, 60, 20,
+                       hwnd, (HMENU)ID_BLACK, GetModuleHandle(NULL), NULL);
         Button_SetCheck(GetDlgItem(hwnd, ID_BLACK), BST_CHECKED);
         RegisterHotKey(hwnd, HK_RECT, MOD_CONTROL, 0x52); //ctrl+R
         RegisterHotKey(hwnd, HK_LINE, MOD_CONTROL, 0x4C); //ctrl+R
@@ -221,10 +210,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         ptMouse.x = LOWORD(lParam);
         ptMouse.y = HIWORD(lParam);
-        if (IsInArea(ptMouse, drawingArea , 0))
+
+        eraserWeight = getValue(eraserWidth);
+
+        if (IsInArea(ptMouse, drawingArea, 0))
         {
             lButtonFlag = true;
-            if(zoomInFlag == true)
+            /*if(zoomInFlag == true)
             {
                 RECT rct;
                 GetClientRect(hwnd, &rct);
@@ -237,7 +229,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 InvalidateRect(hwnd, NULL, TRUE);
                 UpdateWindow(hwnd);
             }
-
+            */
             if(rectangleFlag == true)
             {
                 newRect.left = ptMouse.x;
@@ -251,22 +243,27 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 bezierPoints[0] = ptMouse;
             }
+        }
+        else
+        {
+            lButtonFlag = false;
+        }
+
+        if (IsInEraserArea(ptMouse, eraserArea, eraserWeight/2))
+        {
             if(eraserFlag == true)
             {
                 ptPen = ptMouse;
             }
-        }
-        else{
-            lButtonFlag = false;
         }
         break;
     }
 
     case WM_LBUTTONUP:
     {
-        ptMouse.x       = LOWORD(lParam);
-        ptMouse.y       = HIWORD(lParam);
-        shapeWeight   = getValue(strokeWeight);
+        ptMouse.x = LOWORD(lParam);
+        ptMouse.y = HIWORD(lParam);
+        shapeWeight = getValue(strokeWeight);
         if(Button_GetCheck(GetDlgItem(hwnd, ID_RED)) == BST_CHECKED)
         {
             color = RGB(255, 77, 77);
@@ -293,7 +290,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             ptMouse = AdjustDrawLimits(ptMouse, drawingArea, shapeWeight);
             if(rectangleFlag == true )
             {
-
                 newRect.right    = ptMouse.x;
                 newRect.bottom   = ptMouse.y;
                 hdc = GetDC(hwnd);
@@ -307,7 +303,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
             if(lineFlag == true)
             {
-
                 hdc = GetDC(hwnd);
                 HPEN strokePen   = CreatePen(PS_SOLID, shapeWeight, color);
                 SelectObject(hdc, strokePen);
@@ -355,26 +350,27 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_MOUSEMOVE:
     {
-        ptMouse.x = GET_X_LPARAM(lParam);
-        ptMouse.y = GET_Y_LPARAM(lParam);
-        eraserWeight   = getValue(eraserWidth);
-        ptMouse = AdjustDrawLimits(ptMouse, drawingAreaWithStroke, eraserWeight);
-        if(eraserFlag == true && wParam == MK_LBUTTON && IsInArea(ptMouse, drawingAreaWithStroke, eraserWeight/2 + 1))
-        {
-            hdc = GetDC(hwnd);
-            HPEN strokePen = CreatePen(PS_SOLID, eraserWeight, RGB(255,255,255));
-            SelectObject(hdc, strokePen);
-            MoveToEx(hdc, ptMouse.x, ptMouse.y, NULL);
-            LineTo(hdc, ptPen.x, ptPen.y);
-            ptPen = ptMouse;
-            DeleteObject(strokePen);
+        ptMouse.x = LOWORD(lParam);
+        ptMouse.y = HIWORD(lParam);
 
+        if (IsInEraserArea(ptMouse, eraserArea, eraserWeight/2))
+        {
+            if((eraserFlag == true) && (wParam == MK_LBUTTON))
+            {
+                hdc = GetDC(hwnd);
+                HPEN strokePen = CreatePen(PS_SOLID, eraserWeight, RGB(255,255,255));
+                SelectObject(hdc, strokePen);
+                MoveToEx(hdc, ptMouse.x, ptMouse.y, NULL);
+                LineTo(hdc, ptPen.x, ptPen.y);
+                DeleteObject(strokePen);
+                ptPen = ptMouse;
+            }
         }
-   return 0;
+        return 0;
 
     }
 
-case WM_PAINT:
+    case WM_PAINT:
     {
         hdc = BeginPaint(hwnd, &ps);
 
@@ -420,7 +416,9 @@ case WM_PAINT:
         SelectObject(hdc, hpen);
         DeleteObject(linePen);
 
-        // Draw bitmap image
+        linePen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+        HPEN hpen2 = (HPEN)SelectObject(hdc, linePen);
+        PolyBezier(hdc, Pt, 4);
 
         hbmpImage = (HBITMAP)LoadImage(hInstance, "moon.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         hdcMem = CreateCompatibleDC(hdc);
@@ -443,38 +441,13 @@ case WM_PAINT:
             FillRect(hdc, &rectTemp, hBrush);
             DeleteObject(hBrush);
         }
-
-        /* linePen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
-        HPEN hpen2 = (HPEN)SelectObject(hdc, linePen);
-        PolyBezier(hdc, Pt, 4);*/
         EndPaint(hwnd, &ps);
         break;
 
     }
 
-/*case WM_SIZE:
-    {
-        cxCoord = LOWORD(lParam);
-        cyCoord = HIWORD(lParam);
 
-        /*       apt[0].x = cxCoord / 4 ;
-               apt[0].y = cyCoord / 2 ;
-               apt[1].x = cxCoord / 2 ;
-               apt[1].y = cyCoord / 4 ;
-               apt[2].x = cxCoord / 2 ;
-               apt[2].y = 3 * cyCoord / 4 ;
-               apt[3].x = 3 * cxCoord / 4 ;
-               apt[3].y = cyCoord / 2 ;
-
-        MoveWindow(buttonRect, 620, 50, 100, 30, TRUE);
-        MoveWindow(buttonLine, 620, 90, 100, 30, TRUE);
-        MoveWindow(buttonBezier, 620, 130, 100, 30, TRUE);
-        MoveWindow(buttonEraser, 620, 170, 100, 30, TRUE);
-        MoveWindow(buttonZoomIn, 620, 210, 100, 30, TRUE);
-        break;
-    }*/
-
-case WM_HOTKEY:
+    case WM_HOTKEY:
     {
         switch(wParam)
         {
@@ -494,86 +467,63 @@ case WM_HOTKEY:
         break;
     }
 
-    /*   case WM_MOUSEMOVE:
-           if (wParam & MK_LBUTTON || wParam & MK_RBUTTON)
-           {
-               hdc = GetDC (hwnd) ;
-               SelectObject (hdc, GetStockObject (WHITE_PEN)) ;
-               DrawBezier (hdc, apt) ;
-               if (wParam & MK_LBUTTON)
-               {
-                   apt[1].x = LOWORD (lParam) ;
-                   apt[1].y = HIWORD (lParam) ;
-               }
-               if (wParam & MK_RBUTTON)
-               {
-                   apt[2].x = LOWORD (lParam) ;
-                   apt[2].y = HIWORD (lParam) ;
-               }
-               SelectObject (hdc, GetStockObject (BLACK_PEN)) ;
-               DrawBezier (hdc, apt) ;
-               ReleaseDC (hwnd, hdc) ;
-           }
-           return 0 ;*/
 
-case WM_COMMAND:
-    switch(LOWORD(wParam))
-    {
-    case ID_RECTANGLE:
-    {
-        rectangleFlag = true;
-        lineFlag = false;
-        bezierFlag = false;
-        eraserFlag = false;
-        zoomInFlag = false;
+
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+        case ID_RECTANGLE:
+        {
+            rectangleFlag = true;
+            lineFlag = false;
+            bezierFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            break;
+        }
+        case ID_LINE:
+        {
+            lineFlag = true;
+            rectangleFlag = false;
+            bezierFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            break;
+        }
+        case ID_BEZIER:
+        {
+            bezierFlag = true;
+            lineFlag = false;
+            rectangleFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            break;
+        }
+        case ID_ERASER:
+        {
+            eraserFlag = true;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            zoomInFlag = false;
+            break;
+        }
+
+        case ID_ZOOMIN:
+        {
+            zoomInFlag = true;
+            eraserFlag = false;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            break;
+        }
+
+        }
         break;
-    }
-    case ID_LINE:
-    {
-        lineFlag = true;
-        rectangleFlag = false;
-        bezierFlag = false;
-        eraserFlag = false;
-        zoomInFlag = false;
-        break;
-    }
-    case ID_BEZIER:
-    {
-        bezierFlag = true;
-        lineFlag = false;
-        rectangleFlag = false;
-        eraserFlag = false;
-        zoomInFlag = false;
-        break;
-    }
-    case ID_ERASER:
-    {
-        eraserFlag = true;
-        bezierFlag = false;
-        lineFlag = false;
-        rectangleFlag = false;
-        zoomInFlag = false;
-        break;
-    }
-
-    case ID_ZOOMIN:
-    {
-        zoomInFlag = true;
-        eraserFlag = false;
-        bezierFlag = false;
-        lineFlag = false;
-        rectangleFlag = false;
-        break;
-    }
 
 
-    }
-    break;
-
-
-
-
-case WM_GETMINMAXINFO:
+    case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO winSize = (LPMINMAXINFO)lParam;
         winSize->ptMinTrackSize.x = 800;
@@ -584,20 +534,31 @@ case WM_GETMINMAXINFO:
     }
 
 
-case WM_DESTROY:
+    case WM_DESTROY:
 
-    PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
-    break;
-default:                      /* for messages that we don't deal with */
-    return DefWindowProc (hwnd, message, wParam, lParam);
-}
-return 0;
+        PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
+        break;
+    default:                      /* for messages that we don't deal with */
+        return DefWindowProc (hwnd, message, wParam, lParam);
+    }
+    return 0;
 }
 
 bool IsInArea(POINT point, RECT rect, int excess)
 {
-    if ((point.x - excess > rect.left) && (point.x + excess < rect.right) &&
-        (point.y + excess > rect.top) && (point.y - excess < rect.bottom))
+    if ((point.x - excess > rect.left) && (point.x - excess < rect.right) &&
+            (point.y - excess > rect.top) && (point.y - excess < rect.bottom))
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+bool IsInEraserArea(POINT point, RECT rect, int eraserWeight)
+{
+    if ((point.x - eraserWeight > rect.left) && (point.x + eraserWeight < rect.right) &&
+            (point.y - eraserWeight > rect.top) && (point.y + eraserWeight < rect.bottom))
     {
         return true;
     }
@@ -622,18 +583,22 @@ POINT AdjustDrawLimits(POINT ptMouse, RECT limit, int stroke)
     if(ptMouse.x - stroke < limit.left)
     {
         result.x = limit.left + stroke;
-    } else if(ptMouse.x + stroke > limit.right)
+    }
+    else if(ptMouse.x + stroke > limit.right)
     {
         result.x = limit.right - stroke;
-    } else result.x = ptMouse.x;
+    }
+    else result.x = ptMouse.x;
 
     if(ptMouse.y - stroke < limit.top)
     {
         result.y = limit.top + stroke;
-    } else if(ptMouse.y + stroke > limit.bottom)
+    }
+    else if(ptMouse.y + stroke > limit.bottom)
     {
         result.y = limit.bottom - stroke;
-    } else result.y = ptMouse.y;
+    }
+    else result.y = ptMouse.y;
 
     return result;
 }
