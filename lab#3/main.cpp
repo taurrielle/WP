@@ -91,20 +91,20 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     PAINTSTRUCT ps;
     static RECT rect;
     static HWND buttonRect, buttonLine, buttonBezier, buttonEraser, buttonZoomIn, fillCheck,
-           strokeWeight, eraserWidth;
+           strokeWeight, eraserWidth, buttonPencil, buttonFill, buttonClear, buttonEllipse;
     static HINSTANCE hInstance;
     static int cxCoord, cyCoord, shapeWeight, eraserWeight;
-    static RECT drawingArea = {120, 15, 600, 450},
-                eraserArea = {120, 15, 600, 450};
+    static RECT drawingArea = {100, 15, 600, 450},
+                eraserArea = {100, 15, 600, 450};
     static POINT apt[4], bezierPoints[4];
-    static POINT Pt[4] = { {  40,  100 }, {  60, 150 }, { 140, 150 }, { 110,  48 } };//for bezier
-    static POINT polyPt[4] = {{50, 220}, {30, 250}, {70, 250}, {90, 220}};
+    static POINT Pt[4] = { {20, 80}, {30, 110}, { 70, 100 }, { 80,  80 } };//for bezier
+    static POINT polyPt[4] = {{35, 310}, {25, 340}, {70, 340}, {80, 310}};
     static POINT ptMouse;
-    static RECT newRect;
+    static RECT newRect, newEllipse;
     static POINT newLine, ptPen;
-    COLORREF color;
+    static COLORREF color;
     static BOOL rectangleFlag = false, lineFlag = false, bezierFlag = false, eraserFlag = false, zoomInFlag = false,
-                lButtonFlag = false;
+                lButtonFlag = false, ellipseFlag = false, pencilFlag = false, fillFlag = false;
     HDC hdcMem;
     static BITMAP bitmap;
     HBITMAP hbmpImage = NULL;
@@ -114,36 +114,57 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
     case WM_CREATE:
     {
-
         CreateWindowEx(0, "Button", "Tools",
                        WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
-                       620, 8, 140, 200,
+                       620, 8, 150, 200,
                        hwnd, (HMENU)0, hInstance, NULL);
 
-        buttonRect = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Rectangle"),
-                                    WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    650, 30, 80, 25,
-                                    hwnd, (HMENU) ID_RECTANGLE, GetModuleHandle(NULL), NULL);
+        buttonPencil = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Pencil"),
+                                    WS_VISIBLE | WS_CHILD | BS_PUSHLIKE | BS_ICON,
+                                    710, 30, 36,36,
+                                    hwnd, (HMENU) ID_PENCIL, GetModuleHandle(NULL), NULL);
 
-        buttonLine = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Line"),
-                                    WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    650, 65, 80, 25,
-                                    hwnd, (HMENU) ID_LINE, GetModuleHandle(NULL), NULL);
-
-        buttonBezier = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Bezier"),
-                                      WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      650, 100, 80, 25,
-                                      hwnd, (HMENU) ID_BEZIER, GetModuleHandle(NULL), NULL);
+        buttonFill = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Fill in"),
+                                    WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                    710, 70, 36, 36,
+                                    hwnd, (HMENU) ID_BUTTONFILL, GetModuleHandle(NULL), NULL);
 
         buttonEraser = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Eraser"),
-                                      WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      650, 135, 80, 25,
+                                      WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                      710, 110, 36, 36,
                                       hwnd, (HMENU) ID_ERASER, GetModuleHandle(NULL), NULL);
 
-        buttonZoomIn = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Zoom in"),
+        buttonClear = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Clear"),
+                                      WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                      710, 150, 36, 36,
+                                      hwnd, (HMENU) ID_CLEAR, GetModuleHandle(NULL), NULL);
+
+        buttonLine = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Line"),
+                                    WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                    640, 30, 36, 36,
+                                    hwnd, (HMENU) ID_LINE, GetModuleHandle(NULL), NULL);
+
+        buttonRect = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Rectangle"),
+                                    WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                    640, 70, 36, 36,
+                                    hwnd, (HMENU) ID_RECTANGLE, GetModuleHandle(NULL), NULL);
+
+        buttonEllipse = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Ellipse"),
+                                    WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                    640, 110, 36, 36,
+                                    hwnd, (HMENU) ID_ELLIPSE, GetModuleHandle(NULL), NULL);
+
+        buttonBezier = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Bezier"),
+                                      WS_VISIBLE | WS_CHILD |  BS_PUSHLIKE | BS_ICON,
+                                      640, 150, 36, 36,
+                                      hwnd, (HMENU) ID_BEZIER, GetModuleHandle(NULL), NULL);
+
+
+
+        /*buttonZoomIn = CreateWindowEx(NULL, TEXT("BUTTON"), TEXT("Zoom in"),
                                       WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      650, 170, 80, 25,
-                                      hwnd, (HMENU) ID_ZOOMIN, GetModuleHandle(NULL), NULL);
+                                      630, 170, 80, 25,
+                                      hwnd, (HMENU) ID_ZOOMIN, GetModuleHandle(NULL), NULL);*/
 
         CreateWindowEx(0, "Static", "Shape weight",
                        WS_VISIBLE | WS_CHILD,
@@ -175,7 +196,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                        620, 310, 140, 140,
                        hwnd, (HMENU)0, hInstance, NULL);
 
-
         CreateWindowEx(0, "BUTTON", "Red",
                        WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                        650, 335, 60, 20,
@@ -200,9 +220,41 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                        WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | BST_CHECKED,
                        650, 415, 60, 20,
                        hwnd, (HMENU)ID_BLACK, GetModuleHandle(NULL), NULL);
+
+        CreateWindowEx(0, "Static", "Samples:",
+                       WS_VISIBLE | WS_CHILD,
+                       20, 15, 60, 20,
+                       hwnd, (HMENU)0, hInstance, NULL);
+
         Button_SetCheck(GetDlgItem(hwnd, ID_BLACK), BST_CHECKED);
         RegisterHotKey(hwnd, HK_RECT, MOD_CONTROL, 0x52); //ctrl+R
         RegisterHotKey(hwnd, HK_LINE, MOD_CONTROL, 0x4C); //ctrl+R
+        hInst = ((LPCREATESTRUCT)lParam)->hInstance;
+
+        static HICON  hIcon = LoadIcon(hInst, MAKEINTRESOURCE(PENCIL_ICON));
+        SendMessage(buttonPencil, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(FILL_ICON));
+        SendMessage(buttonFill, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(ERASER_ICON));
+        SendMessage(buttonEraser, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(CLEAR_ICON));
+        SendMessage(buttonClear, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(LINE_ICON));
+        SendMessage(buttonLine, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(RECTANGLE_ICON));
+        SendMessage(buttonRect, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(ELLIPSE_ICON));
+        SendMessage(buttonEllipse, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+
+        hIcon = LoadIcon(hInst, MAKEINTRESOURCE(BEZIER_ICON));
+        SendMessage(buttonBezier, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
         break;
     }
 
@@ -212,6 +264,28 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         ptMouse.y = HIWORD(lParam);
 
         eraserWeight = getValue(eraserWidth);
+        shapeWeight = getValue(strokeWeight);
+
+        if(Button_GetCheck(GetDlgItem(hwnd, ID_RED)) == BST_CHECKED)
+        {
+            color = RGB(255, 77, 77);
+        }
+        else if(Button_GetCheck(GetDlgItem(hwnd, ID_YELLOW)) == BST_CHECKED)
+        {
+            color = RGB(255,245,45);
+        }
+        else if(Button_GetCheck(GetDlgItem(hwnd, ID_BLUE)) == BST_CHECKED)
+        {
+            color = RGB(100,149,237);
+        }
+        else if(Button_GetCheck(GetDlgItem(hwnd, ID_PURPLE)) == BST_CHECKED)
+        {
+            color = RGB(147,112,219);
+        }
+        else if(Button_GetCheck(GetDlgItem(hwnd, ID_BLACK)) == BST_CHECKED)
+        {
+            color = RGB(0, 0, 0);
+        }
 
         if (IsInArea(ptMouse, drawingArea, 0))
         {
@@ -243,6 +317,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 bezierPoints[0] = ptMouse;
             }
+            if(ellipseFlag == true)
+            {
+                newEllipse.left = ptMouse.x;
+                newEllipse.top = ptMouse.y;
+            }
+            if(fillFlag == true)
+            {
+                hdc = GetDC(hwnd);
+                HBRUSH brush = CreateSolidBrush(color);
+                FillRect(hdc, &drawingArea, brush);
+                DeleteObject(brush);
+            }
+
         }
         else
         {
@@ -255,6 +342,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 ptPen = ptMouse;
             }
+            if(pencilFlag == true)
+            {
+                ptPen = ptMouse;
+            }
         }
         break;
     }
@@ -263,27 +354,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         ptMouse.x = LOWORD(lParam);
         ptMouse.y = HIWORD(lParam);
-        shapeWeight = getValue(strokeWeight);
-        if(Button_GetCheck(GetDlgItem(hwnd, ID_RED)) == BST_CHECKED)
-        {
-            color = RGB(255, 77, 77);
-        }
-        else if(Button_GetCheck(GetDlgItem(hwnd, ID_YELLOW)) == BST_CHECKED)
-        {
-            color = RGB(255,245,45);
-        }
-        else if(Button_GetCheck(GetDlgItem(hwnd, ID_BLUE)) == BST_CHECKED)
-        {
-            color = RGB(100,149,237);
-        }
-        else if(Button_GetCheck(GetDlgItem(hwnd, ID_PURPLE)) == BST_CHECKED)
-        {
-            color = RGB(147,112,219);
-        }
-        else if(Button_GetCheck(GetDlgItem(hwnd, ID_BLACK)) == BST_CHECKED)
-        {
-            color = RGB(0, 0, 0);
-        }
+
+
+
 
         if (lButtonFlag == true)
         {
@@ -313,6 +386,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             if(bezierFlag == true)
             {
                 bezierPoints[1] = ptMouse;
+            }
+
+            if(ellipseFlag == true)
+            {
+                newEllipse.right    = ptMouse.x;
+                newEllipse.bottom   = ptMouse.y;
+                hdc = GetDC(hwnd);
+                HPEN strokePen = CreatePen(PS_SOLID, shapeWeight, color);
+                HBRUSH fillBrush = (Button_GetCheck(fillCheck) == BST_CHECKED)? CreateSolidBrush(color) : (HBRUSH)GetStockObject(NULL_BRUSH);
+                SelectObject(hdc, strokePen);
+                SelectObject(hdc, fillBrush);
+                Ellipse(hdc, newEllipse.left, newEllipse.top, newEllipse.right, newEllipse.bottom);
+                DeleteObject(strokePen);
             }
         }
         break;
@@ -353,6 +439,20 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         ptMouse.x = LOWORD(lParam);
         ptMouse.y = HIWORD(lParam);
 
+        if (IsInEraserArea(ptMouse, drawingArea, shapeWeight/2))
+        {
+            if((pencilFlag == true) && (wParam == MK_LBUTTON))
+            {
+                hdc = GetDC(hwnd);
+                HPEN strokePen = CreatePen(PS_SOLID, shapeWeight, color);
+                SelectObject(hdc, strokePen);
+                MoveToEx(hdc, ptMouse.x, ptMouse.y, NULL);
+                LineTo(hdc, ptPen.x, ptPen.y);
+                DeleteObject(strokePen);
+                ptPen = ptMouse;
+            }
+        }
+
         if (IsInEraserArea(ptMouse, eraserArea, eraserWeight/2))
         {
             if((eraserFlag == true) && (wParam == MK_LBUTTON))
@@ -383,36 +483,36 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         HPEN hpen;
         HPEN linePen = CreatePen(PS_SOLID, 2, lineColor);
         hpen = (HPEN)SelectObject(hdc, linePen);
-        MoveToEx(hdc, 50, 50, NULL);
-        LineTo(hdc, 100, 50);
-        Rectangle(hdc, 50, 120, 100, 150);
+        MoveToEx(hdc, 25, 40, NULL);
+        LineTo(hdc, 75, 40);
+        Rectangle(hdc, 25, 180, 80, 210);
 
         lineColor = RGB(255,245,45);
         linePen = CreatePen(PS_SOLID, 3, lineColor);
         hpen = (HPEN)SelectObject(hdc, linePen);
-        MoveToEx(hdc, 50, 60, NULL);
-        LineTo(hdc, 100, 60);
-        Pie(hdc, 50, 160, 100, 200, 100, 160, 100, 200);
+        MoveToEx(hdc, 25, 45, NULL);
+        LineTo(hdc, 75, 45);
+        Pie(hdc, 30, 220, 80, 260, 80, 220, 80, 260);
 
         lineColor = RGB(60,179,113);
         linePen = CreatePen(PS_SOLID, 4, lineColor);
         hpen = (HPEN)SelectObject(hdc, linePen);
-        MoveToEx(hdc, 50, 70, NULL);
-        LineTo(hdc, 100, 70);
-        Ellipse(hdc, 50, 120, 100, 150);
+        MoveToEx(hdc, 25, 52, NULL);
+        LineTo(hdc, 75, 52);
+        Ellipse(hdc, 25, 270, 80, 300);
 
         lineColor = RGB(100,149,237);
         linePen = CreatePen(PS_SOLID, 5, lineColor);
         hpen = (HPEN)SelectObject(hdc, linePen);
-        MoveToEx(hdc, 50, 80, NULL);
-        LineTo(hdc, 100, 80);
+        MoveToEx(hdc, 25, 59, NULL);
+        LineTo(hdc, 75, 59);
         Polygon(hdc, polyPt, 4);
 
         lineColor = RGB(147,112,219);
         linePen = CreatePen(PS_SOLID, 6, lineColor);
         hpen = (HPEN)SelectObject(hdc, linePen);
-        MoveToEx(hdc, 50, 90, NULL);
-        LineTo(hdc, 100, 90);
+        MoveToEx(hdc, 25, 67, NULL);
+        LineTo(hdc, 75, 67);
         SelectObject(hdc, hpen);
         DeleteObject(linePen);
 
@@ -424,20 +524,43 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         hdcMem = CreateCompatibleDC(hdc);
         SelectObject(hdcMem, hbmpImage);
         GetObject(hbmpImage, sizeof(bitmap), &bitmap);
-        BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+        BitBlt(hdc, 0, 430, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
         DeleteDC(hdcMem);
         DeleteObject(hbmpImage);
+
         RECT rectTemp;
         HBRUSH hBrush;
-        rectTemp.left    = 40;
-        rectTemp.right   = 70;
-        for(int i = 0; i < (130 - 100); i++)
+        rectTemp.left    = 25;
+        rectTemp.right   = 80;
+        int r1=0,g1=0,b1=0; //Any start color
+        int r2=255,g2=0,b2=0; //Any stop color
+        for(int i = 0; i < 30; i++)
         {
-            int red;
-            red = i * 255 / (130 - 100);
-            rectTemp.top    = 100  + i;
-            rectTemp.bottom = 100 + i + 1;
-            hBrush = CreateSolidBrush(RGB(red, 0, 0));
+            int red, green, blue;
+            red = r1 + (i * (r2-r1) / 30);
+            green = g1 + (i * (g2-g1) / 30);
+            blue = b1 + (i * (b2-b1) / 30);
+            rectTemp.top    = 110  + i;
+            rectTemp.bottom = 110 + i + 1;
+            hBrush = CreateSolidBrush(RGB(red, green, blue));
+            FillRect(hdc, &rectTemp, hBrush);
+            DeleteObject(hBrush);
+        }
+
+        rectTemp.left    = 25;
+        rectTemp.right   = 80;
+
+        r1=255,g1=0,b1=0; //Any start color
+        r2=255,g2=255,b2=255; //Any stop color
+        for(int i = 0; i < 30; i++)
+        {
+            int red, green, blue;
+            red = r1 + (i * (r2-r1) / 30);
+            green = g1 + (i * (g2-g1) / 30);
+            blue = b1 + (i * (b2-b1) / 30);
+            rectTemp.top    = 145  + i;
+            rectTemp.bottom = 145 + i + 1;
+            hBrush = CreateSolidBrush(RGB(red, green, blue));
             FillRect(hdc, &rectTemp, hBrush);
             DeleteObject(hBrush);
         }
@@ -455,19 +578,29 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         {
             rectangleFlag = true;
             lineFlag = false;
+            bezierFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            pencilFlag = false;
+            ellipseFlag = false;
+            fillFlag = false;
             break;
         }
         case HK_LINE:
         {
             rectangleFlag = false;
             lineFlag = true;
+            bezierFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            pencilFlag = false;
+            ellipseFlag = false;
+            fillFlag = false;
             break;
         }
         }
         break;
     }
-
-
 
     case WM_COMMAND:
         switch(LOWORD(wParam))
@@ -479,6 +612,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             bezierFlag = false;
             eraserFlag = false;
             zoomInFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
             break;
         }
         case ID_LINE:
@@ -488,6 +623,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             bezierFlag = false;
             eraserFlag = false;
             zoomInFlag = false;
+            ellipseFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
             break;
         }
         case ID_BEZIER:
@@ -497,6 +635,21 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             rectangleFlag = false;
             eraserFlag = false;
             zoomInFlag = false;
+            ellipseFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
+            break;
+        }
+        case ID_ELLIPSE:
+        {
+            ellipseFlag = true;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            eraserFlag = false;
+            zoomInFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
             break;
         }
         case ID_ERASER:
@@ -506,7 +659,50 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             lineFlag = false;
             rectangleFlag = false;
             zoomInFlag = false;
+            ellipseFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
             break;
+        }
+
+        case ID_PENCIL:
+        {
+            pencilFlag = true;
+            eraserFlag = false;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            zoomInFlag = false;
+            ellipseFlag = false;
+            fillFlag = false;
+            break;
+        }
+
+        case ID_BUTTONFILL:
+        {
+            fillFlag = true;
+            pencilFlag = false;
+            eraserFlag = false;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            zoomInFlag = false;
+            ellipseFlag = false;
+            break;
+        }
+
+        case ID_CLEAR:
+        {
+            eraserFlag = false;
+            bezierFlag = false;
+            lineFlag = false;
+            rectangleFlag = false;
+            zoomInFlag = false;
+            ellipseFlag = false;
+            pencilFlag = false;
+            fillFlag = false;
+            InvalidateRect(hwnd, &drawingArea, FALSE);
+            InvalidateRect(hwnd, &drawingArea, TRUE);
         }
 
         case ID_ZOOMIN:
@@ -516,6 +712,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             bezierFlag = false;
             lineFlag = false;
             rectangleFlag = false;
+            ellipseFlag = false;
+            fillFlag = false;
+            pencilFlag = false;
             break;
         }
 

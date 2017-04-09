@@ -14,3 +14,18 @@
 
 #define HK_RECT 115
 #define HK_LINE 116
+
+#define ID_PENCIL 117
+#define ID_BUTTONFILL 118
+#define ID_CLEAR 119
+#define ID_ELLIPSE 120
+
+#define PENCIL_ICON 121
+#define FILL_ICON 122
+#define ERASER_ICON 123
+#define CLEAR_ICON 124
+
+#define LINE_ICON 125
+#define ELLIPSE_ICON 126
+#define RECTANGLE_ICON 127
+#define BEZIER_ICON 128

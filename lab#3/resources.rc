@@ -1,0 +1,12 @@
+#include "header.h"
+#include <windows.h>
+
+PENCIL_ICON ICON "/icons/pencil.ico"
+FILL_ICON ICON "/icons/fill1.ico"
+ERASER_ICON ICON "/icons/eraser.ico"
+CLEAR_ICON ICON "/icons/clear.ico"
+
+LINE_ICON ICON "/icons/line.ico"
+RECTANGLE_ICON ICON "/icons/rectangle.ico"
+ELLIPSE_ICON ICON "/icons/ellipse.ico"
+BEZIER_ICON ICON "/icons/bezier.ico"
