@@ -155,6 +155,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         FillRect(hdcMem, &rect,(HBRUSH)GetStockObject(WHITE_BRUSH));
 
+
         circle.Move(hdcMem, rect, hBrush);
         circle2.Move(hdcMem, rect, hBrush);
         circle3.Move(hdcMem, rect, hBrush);
@@ -437,7 +438,7 @@ void onInteraction(Objects &obj1, Objects &obj2, int &nrObj2)
 
     float distance = sqrt(pow(center1.x - center2.x, 2) + pow(center1.y - center2.y,  2));
 
-    if (distance <= radius1 + radius2)
+    if (distance <= radius1 + radius2 && obj1.squareFlag == obj2.squareFlag)
     {
         obj1.changeColor();
         obj2.changeColor();
@@ -468,7 +469,7 @@ void onInteraction2(Objects &obj1, Objects &obj2)
 
     float distance = sqrt(pow(center1.x - center2.x, 2) + pow(center1.y - center2.y,  2));
 
-    if (distance <= radius1 + radius2)
+    if (distance <= radius1 + radius2 && obj1.squareFlag == obj2.squareFlag)
     {
         obj1.changeColor();
         obj2.changeColor();
