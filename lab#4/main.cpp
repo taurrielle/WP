@@ -90,7 +90,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static HBITMAP hbmMem;
     static HANDLE hOld;
 
-
     PAINTSTRUCT ps;
     static RECT rect;
     static HWND scrollBar;
@@ -103,7 +102,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static HBRUSH hBrush;
     static Objects circle(leftCorner, dimensions, 3, RGB(0, 0, 0)),
            circle2(leftCorner, dimensions, 10, RGB(255, 0, 0)),
-           circle3 (leftCorner, dimensions, 20, RGB(0, 0, 255));
+           circle3 (leftCorner, dimensions, 15, RGB(0, 0, 255));
     switch (message)                  /* handle the messages */
     {
     case WM_CREATE:
@@ -116,7 +115,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         hOld = SelectObject(hdcMem,hbmMem);
 
         SetTimer(hwnd, ID_TIMER, timerSpeed, NULL);
-
         break;
     }
 
@@ -159,7 +157,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         FillRect(hdcMem, &rect,(HBRUSH)GetStockObject(WHITE_BRUSH));
 
-
         circle.Move(hdcMem, rect, hBrush);
         circle2.Move(hdcMem, rect, hBrush);
         circle3.Move(hdcMem, rect, hBrush);
@@ -169,15 +166,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             objects[i] -> Move(hdcMem, rect, hBrush);
         }
 
-
-
         onInteraction(circle, circle2, nrObj2);
         onInteraction(circle, circle3, nrObj2);
         onInteraction(circle2, circle3, nrObj2);
 
-        for(int i = 0; i<nrObj-1; i++)
+        for(int i = 0; i < nrObj - 1; i++)
         {
-            for(int j = i+1; j < nrObj; j++)
+            for(int j = i + 1; j < nrObj; j++)
             {
                 onInteraction(*objects[i],*objects[j], nrObj);
             }
@@ -211,7 +206,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 objects2[i] -> decelerate(1);
             }
-            //timerSpeed += 10;
         }
         else
         {
@@ -227,15 +221,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 objects2[i] -> accelerate(1);
             }
-
-            /*timerSpeed -= 10;
-            if (timerSpeed < 0)
-            {
-                timerSpeed = 0;
-            }*/
         }
-        /*KillTimer(hwnd, ID_TIMER);
-        SetTimer(hwnd, ID_TIMER, timerSpeed, NULL);*/
         break;
     }
 
@@ -245,7 +231,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         {
         case VK_DOWN:
         {
-            //timerSpeed += 30;
             circle.decelerate(1);
             circle2.decelerate(1);
             circle3.decelerate(1);
@@ -263,12 +248,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case VK_UP:
         {
-            /* timerSpeed -= 30;
-             if (timerSpeed < 0)
-             {
-                 timerSpeed = 0;
-             }*/
-
             circle.accelerate(1);
             circle2.accelerate(1);
             circle3.accelerate(1);
@@ -333,9 +312,8 @@ Objects::Objects(POINT leftCorner, POINT dimensions, const int &speed, COLORREF 
     this -> xSpeed = speed;
     this -> ySpeed = speed;
     this -> color = color;
-
-
 }
+
 void Objects::Move(const HDC &hdc, const RECT& rect, HBRUSH &hBrush)
 {
     hBrush = CreateSolidBrush(color);
@@ -349,24 +327,37 @@ void Objects::Move(const HDC &hdc, const RECT& rect, HBRUSH &hBrush)
     if(dimensions.x > rect.right-1)
     {
         xSpeed = - abs(xSpeed);
+        squareFlag = 1;
     }
     else if(leftCorner.x < 0)
     {
         xSpeed = abs(xSpeed);
+        squareFlag = 1;
     }
 
     if(dimensions.y > rect.bottom-1)
     {
         ySpeed = - abs(ySpeed);
+        accelerate(1);
     }
     else if(leftCorner.y < rect.top + 1)
     {
         ySpeed = abs(ySpeed);
+        accelerate(1);
     }
 
-    Ellipse(hdc, leftCorner.x, leftCorner.y, dimensions.x, dimensions.y);
-    SelectObject(hdc, GetStockObject(WHITE_BRUSH));
-    DeleteObject(hBrush);
+    if(squareFlag == 1)
+    {
+        Rectangle(hdc, leftCorner.x, leftCorner.y, dimensions.x, dimensions.y);
+        SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+        DeleteObject(hBrush);
+    }
+    else
+    {
+        Ellipse(hdc, leftCorner.x, leftCorner.y, dimensions.x, dimensions.y);
+        SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+        DeleteObject(hBrush);
+    }
     return;
 
 }
@@ -452,35 +443,22 @@ void onInteraction(Objects &obj1, Objects &obj2, int &nrObj2)
     {
         obj1.changeColor();
         obj2.changeColor();
+        /*int speed = (rand() % 10) + 1;
+        objects2[nrObj2] = new Objects(obj1.leftCorner, obj1.dimensions, - speed, RGB(211, 211, 211));
+        nrObj2 ++;*/
+    }
+    if (distance <= radius1 + radius2 && distance >= radius1 + radius2 - 5)
+    {
         int speed = (rand() % 10) + 1;
         objects2[nrObj2] = new Objects(obj1.leftCorner, obj1.dimensions, - speed, RGB(211, 211, 211));
         nrObj2 ++;
-
-
     }
     return;
-    /*  if ((obj1.dimensions.x == obj2.leftCorner.x && obj2.leftCorner.y <= obj1.dimensions.y && obj2.leftCorner.y >= obj1.leftCorner.y) ||
-          (obj2.dimensions.x == obj1.leftCorner.x && obj1.leftCorner.y <= obj2.dimensions.y && obj1.leftCorner.y >= obj2.leftCorner.y) ||
-
-          (obj1.leftCorner.x == obj2.dimensions.x && obj1.leftCorner.y <= obj2.dimensions.y && obj1.leftCorner.y >= obj2.leftCorner.y) ||
-          (obj2.leftCorner.x == obj1.dimensions.x && obj2.leftCorner.y <= obj1.dimensions.y && obj2.leftCorner.y >= obj1.leftCorner.y) ||
-
-          (obj1.dimensions.y == obj2.leftCorner.y && obj2.dimensions.x >= obj1.leftCorner.x && obj2.dimensions.x <= obj1.dimensions.x) ||
-          (obj2.dimensions.y == obj1.leftCorner.y && obj1.dimensions.x >= obj2.leftCorner.x && obj1.dimensions.x <= obj2.dimensions.x)||
-
-          (obj1.leftCorner.y == obj2.dimensions.x && obj2.dimensions.x >= obj1.leftCorner.x && obj2.dimensions.x <= obj1.dimensions.x) ||
-          (obj1.leftCorner.y == obj2.dimensions.x && obj1.dimensions.x >= obj2.leftCorner.x && obj1.dimensions.x <= obj2.dimensions.x))
-      {
-          obj1.changeColor();
-          obj2.changeColor();
-
-      }*/
 }
 
 void Objects::changeColor()
 {
     //srand(GetTickCount());
-
     int r = rand() % 256;
     int g = rand() % 256;
     int b = rand() % 256;

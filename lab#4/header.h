@@ -9,7 +9,7 @@ public:
 
 
     int xSpeed, ySpeed;
-    int counter = 0;
+    int squareFlag = 0;
 
     Objects(POINT leftCorner, POINT rightCorner, const int &speed,  COLORREF color);
     void accelerate (const int & delta);
