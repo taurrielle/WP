@@ -20,3 +20,4 @@ public:
 
 };
     void onInteraction(Objects &obj1, Objects &obj2, int &nrObj);
+    void onInteraction2(Objects &obj1, Objects &obj2);

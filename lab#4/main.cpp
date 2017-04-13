@@ -9,12 +9,10 @@
 
 #include "header.h"
 
-
-
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 static Objects *objects[200], *objects2[200];
-
+static int nrObj2 = 0;
 
 
 /*  Make the class name into a global variable  */
@@ -96,7 +94,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static HINSTANCE hInstance;
     static int cxCoord, cyCoord;
     static int xPos, xMin, xMax, i, index,iVertPos;
-    static int timerSpeed = 10, nrObj = 0, nrObj2 = 0;
+    static int timerSpeed = 10, nrObj = 0;
     static POINT leftCorner = {50, 50};
     static POINT dimensions = {80, 80};
     static HBRUSH hBrush;
@@ -174,7 +172,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         {
             for(int j = i + 1; j < nrObj; j++)
             {
-                onInteraction(*objects[i],*objects[j], nrObj);
+                onInteraction2(*objects[i],*objects[j]);
             }
         }
 
@@ -443,17 +441,40 @@ void onInteraction(Objects &obj1, Objects &obj2, int &nrObj2)
     {
         obj1.changeColor();
         obj2.changeColor();
-        /*int speed = (rand() % 10) + 1;
-        objects2[nrObj2] = new Objects(obj1.leftCorner, obj1.dimensions, - speed, RGB(211, 211, 211));
-        nrObj2 ++;*/
-    }
-    if (distance <= radius1 + radius2 && distance >= radius1 + radius2 - 5)
-    {
         int speed = (rand() % 10) + 1;
         objects2[nrObj2] = new Objects(obj1.leftCorner, obj1.dimensions, - speed, RGB(211, 211, 211));
         nrObj2 ++;
     }
+    /*if (distance <= radius1 + radius2 && distance >= radius1 + radius2 - 5)
+    {
+        int speed = (rand() % 10) + 1;
+        objects2[nrObj2] = new Objects(obj1.leftCorner, obj1.dimensions, - speed, RGB(211, 211, 211));
+        nrObj2 ++;
+    }*/
     return;
+}
+
+void onInteraction2(Objects &obj1, Objects &obj2)
+{
+    POINT center1, center2;
+    int radius1 = (obj1.dimensions.x - obj1.leftCorner.x) / 2;
+    int radius2= (obj2.dimensions.x - obj2.leftCorner.x) / 2;
+
+    center1.x = (obj1.dimensions.x - radius1);
+    center1.y = (obj1.dimensions.y - radius1);
+
+    center2.x = (obj2.dimensions.x - radius2);
+    center2.y = (obj2.dimensions.y - radius2);
+
+    float distance = sqrt(pow(center1.x - center2.x, 2) + pow(center1.y - center2.y,  2));
+
+    if (distance <= radius1 + radius2)
+    {
+        obj1.changeColor();
+        obj2.changeColor();
+    }
+    return;
+
 }
 
 void Objects::changeColor()
